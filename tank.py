@@ -1,8 +1,9 @@
 import pygame
-import math
+
 
 class Tank:
-    def __init__(self, imagem_tank, x, y, escala):
+    def __init__(self, imagem_tank, x, y, escala, vida):
+        self.vida = vida
         # Carrega a imagem do tanque
         self.imagem_original = pygame.image.load(imagem_tank).convert_alpha()
         # Redimensiona a imagem de acordo com a escala fornecida
@@ -30,7 +31,12 @@ class Tank:
     def desenhar(self, tela):
         # Desenha a imagem do tanque na tela nas coordenadas (x, y)
         tela.blit(self.imagem, self.rect.topleft)
+        #desenha hitbox do tank
+        pygame.draw.rect(tela, (255,255,255), self.rect, 1)
 
     def inverter(self):
         self.imagem_original = pygame.transform.flip(self.imagem_original, True, False)
         self.imagem = self.imagem_original
+    
+    def get_vida(self):
+        return self.vida
