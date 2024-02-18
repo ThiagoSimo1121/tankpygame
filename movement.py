@@ -1,6 +1,6 @@
 import pygame
 import math
-from tank import Tank
+
 
 class Movement:
     def __init__(self, tank, velocidade, teclas):
@@ -29,4 +29,12 @@ class Movement:
             self.tank.y = 710
         if self.tank.y <= 40:
             self.tank.y = 40
+    
+    def collide_with_walls(self, world):
+        for tile in world.tile_list:
+            if self.tank.rect.colliderect(tile[1]):
+                # nao esta funcionando no momento
+                if self.tank.x >= tile[1].right:
+                    self.tank.x = tile[1].right
+            
 
