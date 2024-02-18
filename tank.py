@@ -40,3 +40,11 @@ class Tank:
     
     def get_vida(self):
         return self.vida
+
+    def reset(self, x, y):
+        self.x = x
+        self.y = y
+        self.vida = 3
+
+
+
