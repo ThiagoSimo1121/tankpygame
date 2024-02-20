@@ -12,9 +12,9 @@ class Movement:
     def mover(self, direção):
         keys = pygame.key.get_pressed()
         if keys[self.teclas['esquerda']]:
-            self.tank.rotacionar(0.5)  # Gira no sentido anti-horário
+            self.tank.rotacionar(0.4)  # Gira no sentido anti-horário
         if keys[self.teclas['direita']]:
-            self.tank.rotacionar(-0.5)  # Gira no sentido horário
+            self.tank.rotacionar(-0.4)  # Gira no sentido horário
         if keys[self.teclas['cima']]:
             # Move o tanque na direção que está apontando
             self.old_x = self.tank.x

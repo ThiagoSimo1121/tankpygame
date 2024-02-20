@@ -2,7 +2,7 @@ import pygame
 
 
 class Tank:
-    def __init__(self, imagem_tank, x, y, escala, vida):
+    def __init__(self, imagem_tank, x, y, escala, vida, cor):
         self.vida = vida
         # Carrega a imagem do tanque
         self.imagem_original = pygame.image.load(imagem_tank).convert_alpha()
@@ -10,6 +10,8 @@ class Tank:
         largura = int(self.imagem_original.get_width() * escala)
         altura = int(self.imagem_original.get_height() * escala)
         self.imagem_original = pygame.transform.scale(self.imagem_original, (largura, altura))
+        # Altera a cor da imagem
+        self.imagem_original.fill(cor, special_flags=pygame.BLEND_RGBA_MULT)
         self.imagem = self.imagem_original
         # Define a posição inicial do tanque
         self.x = x
@@ -18,7 +20,6 @@ class Tank:
         self.angulo = 0
         # Define o retângulo inicial do tanque
         self.rect = self.imagem.get_rect(center=(self.x, self.y))
-
 
     def rotacionar(self, delta_angulo):
         # Incrementa o ângulo do tanque
@@ -31,8 +32,6 @@ class Tank:
     def desenhar(self, tela):
         # Desenha a imagem do tanque na tela nas coordenadas (x, y)
         tela.blit(self.imagem, self.rect.topleft)
-        #desenha hitbox do tank
-        pygame.draw.rect(tela, (255,255,255), self.rect, 1)
 
     def inverter(self):
         self.imagem_original = pygame.transform.flip(self.imagem_original, True, False)

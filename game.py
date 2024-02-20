@@ -6,12 +6,17 @@ from bullet import Bullet
 from map import World, world_matrix1
 
 def show_victory_screen(tela, vencedor):
-    font = pygame.font.Font(None, 60)
-    texto = font.render(f"Player {vencedor} Wins! Pressione R para Reiniciar", True, (255, 255, 255))
+    tela.fill((0, 0, 0))  # Preenche a tela com a cor preta
+    font_path = "bridgeofficer.ttf"
+    font = pygame.font.Font(font_path, 40)
+    titulo = font.render(f"Player {vencedor} Wins! ", True, (255, 255, 255))
+    titulo_rect = titulo.get_rect(center=(tela.get_width() // 2, tela.get_height() // 3))
+
+    texto = font.render("Pressione R para Reiniciar", True, (255, 255, 255))
     texto_rect = texto.get_rect(center=(tela.get_width() // 2, tela.get_height() // 2))
 
     while True:
-        tela.fill((0, 0, 0))
+        tela.blit(titulo, titulo_rect)
         tela.blit(texto, texto_rect)
 
         pygame.display.flip()
@@ -24,9 +29,11 @@ def show_victory_screen(tela, vencedor):
                 if evento.key == pygame.K_r:
                     return True  # Retorna True indicando reinício do jogo
 
+
 def draw_text(texto, pos_x, pos_y,tela):
-    font = pygame.font.Font(None, 40)
-    text = font.render(f"{texto}", True, (255, 255, 255))
+    font_path = "bridgeofficer.ttf"
+    font = pygame.font.Font(font_path, 20)
+    text = font.render(f"{texto}", True, (255, 0, 0))
     tela.blit(text, (pos_x - text.get_width() // 2, pos_y - text.get_height() // 2))
 
 def game_loop():
@@ -47,8 +54,8 @@ def game_loop():
 
 
     # Create a tank
-    meu_tanque = Tank('Tank (2).png', 100, 375, 0.3, 3)
-    benio_tanque = Tank('Tank (2).png', 1340, 375, 0.3, 3)
+    meu_tanque = Tank('negro.png', 100, 375, 0.3, 3, (255,255,255))
+    benio_tanque = Tank('negro.png', 1340, 375, 0.3, 3, (255,3,255))
     benio_tanque.inverter()
 
     tank1vivo = True
@@ -63,16 +70,16 @@ def game_loop():
     pygame.display.set_caption('Jogo de Tanque')
 
     # Set up tank movements
-    movimento_tanque1 = Movement(meu_tanque, 0.6, {'esquerda': pygame.K_a, 'direita': pygame.K_d,
+    movimento_tanque1 = Movement(meu_tanque, 0.5, {'esquerda': pygame.K_a, 'direita': pygame.K_d,
                                                    'cima': pygame.K_w, 'baixo': pygame.K_s})
-    movimento_tanque2 = Movement(benio_tanque, 0.6, {'esquerda': pygame.K_LEFT, 'direita': pygame.K_RIGHT,
+    movimento_tanque2 = Movement(benio_tanque, 0.5, {'esquerda': pygame.K_LEFT, 'direita': pygame.K_RIGHT,
                                                      'cima': pygame.K_UP, 'baixo': pygame.K_DOWN})
 
     # Game loop
     rodando = True
     while rodando:
         # Fill the screen with green color
-        tela.fill((140, 238, 144))
+        tela.fill((8,51,8))
 
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -101,12 +108,14 @@ def game_loop():
             bala.collision_screen()
             bala.collision_walls(world)
 
-            if bala.get_num_of_collisions() >= 3:
+            if bala.get_num_of_collisions() >= 4:
                 balas.remove(bala)
 
             if bala.dono == 'meu_tanque' and tank2vivo and bala.rect.colliderect(benio_tanque.rect):
                 balas.remove(bala)
                 bala.hit_tank(benio_tanque)
+
+
                 if benio_tanque.get_vida() == 0:
                     tank2vivo = False
                     balas.clear()
@@ -114,6 +123,8 @@ def game_loop():
             elif bala.dono == 'benio_tanque' and tank1vivo and bala.rect.colliderect(meu_tanque.rect):
                 balas.remove(bala)
                 bala.hit_tank(meu_tanque)
+
+
                 if meu_tanque.get_vida() == 0:
                     tank1vivo = False
                     balas.clear()
@@ -135,7 +146,7 @@ def game_loop():
         world.draw(tela)
         if meu_tanque.get_vida() != 0 and benio_tanque.get_vida() != 0:
             draw_text(f"PLAYER 1 LIFE: {meu_tanque.get_vida()}", 150, 40,tela)
-            draw_text(f"PLAYER 2 LIFE: {benio_tanque.get_vida()}", 1300, 40,tela)
+            draw_text(f"PLAYER 2 LIFE: {benio_tanque.get_vida()}", 1280, 40,tela)
         else:
             if meu_tanque.get_vida() == 0 or benio_tanque.get_vida() == 0:
                 # Verificar condição de vitória
