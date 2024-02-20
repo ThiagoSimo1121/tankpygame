@@ -1,166 +1,180 @@
-
 import pygame
 from tank import Tank
 from movement import Movement
 from bullet import Bullet
-from map import World, world_matrix1
+from map import Map, world_matrix1, world_matrix2, world_matrix3
 
-def show_victory_screen(tela, vencedor):
-    tela.fill((0, 0, 0))  # Preenche a tela com a cor preta
-    font_path = "bridgeofficer.ttf"
-    font = pygame.font.Font(font_path, 40)
-    titulo = font.render(f"Player {vencedor} Wins! ", True, (255, 255, 255))
-    titulo_rect = titulo.get_rect(center=(tela.get_width() // 2, tela.get_height() // 3))
 
-    texto = font.render("Pressione R para Reiniciar", True, (255, 255, 255))
-    texto_rect = texto.get_rect(center=(tela.get_width() // 2, tela.get_height() // 2))
+def show_victory_screen(screen, winner):
+    screen.fill((0, 0, 0))  # Fill the screen with black color
+    font_path = "assets/bridgeofficer.ttf"
+    font = pygame.font.Font(font_path, 35)
+    title = font.render(f"Player {winner} Wins! ", True, (99, 79, 88))
+    title_rect = title.get_rect(center=(screen.get_width() // 2, screen.get_height() // 3))
+
+    text = font.render("Press R to Restart", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+
+    credits_text = font.render("Davi Guilherme / Benicio Mozan / Thiago Simões", True, (255, 255, 255))
+    credits_text_rect = credits_text.get_rect(center=(screen.get_width() // 2, 600))
 
     while True:
-        tela.blit(titulo, titulo_rect)
-        tela.blit(texto, texto_rect)
+        screen.blit(title, title_rect)
+        screen.blit(text, text_rect)
+        screen.blit(credits_text, credits_text_rect)
 
         pygame.display.flip()
 
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            elif evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_r:
-                    return True  # Retorna True indicando reinício do jogo
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    return True  # Returns True indicating game restart
 
 
-def draw_text(texto, pos_x, pos_y,tela):
-    font_path = "bridgeofficer.ttf"
+def draw_text(text, pos_x, pos_y, screen):
+    font_path = "assets/bridgeofficer.ttf"
     font = pygame.font.Font(font_path, 20)
-    text = font.render(f"{texto}", True, (255, 0, 0))
-    tela.blit(text, (pos_x - text.get_width() // 2, pos_y - text.get_height() // 2))
+    text_surface = font.render(f"{text}", True, (0, 0, 0))
+    screen.blit(text_surface, (pos_x - text_surface.get_width() // 2, pos_y - text_surface.get_height() // 2))
 
-def game_loop():
+
+def game_loop(map_choice):
     # Initialize Pygame
     pygame.init()
 
     # Define screen dimensions
-    largura_tela = 1440
-    altura_tela = 750
+    screen_width = 1440
+    screen_height = 750
 
     # Create the screen
-    tela = pygame.display.set_mode((largura_tela, altura_tela))
+    screen = pygame.display.set_mode((screen_width, screen_height))
 
-    # time between shots
-    cooldown_time = 1500
-    last_shot_time_meu_tanque = 0
-    last_shot_time_benio_tanque = 0
+    # Time between shots
+    cooldown_time = 0
+    last_shot_time_my_tank = 0
+    last_shot_time_enemy_tank = 0
 
+    # Sound effects
+    shot_sound_effect = pygame.mixer.Sound('assets/tankshot_effect.wav')
+    hit_sound_effect = pygame.mixer.Sound('assets/tankhit_effect.wav')
+    music = pygame.mixer.Sound('assets/background_effect.mp3')
+    shot_sound_effect.set_volume(0.4)
+    music.set_volume(0.3)
+    music.play()
 
-    # Create a tank
-    meu_tanque = Tank('negro.png', 100, 375, 0.3, 3, (255,255,255))
-    benio_tanque = Tank('negro.png', 1340, 375, 0.3, 3, (255,3,255))
-    benio_tanque.inverter()
+    # Create tanks
+    my_tank = Tank('assets/tank.png', 100, 375, 0.3, 3, (255, 50, 0))
+    enemy_tank = Tank('assets/tank.png', 1340, 375, 0.3, 3, (0, 0, 240))
+    enemy_tank.invert()
 
-    tank1vivo = True
-    tank2vivo = True
+    tank1_alive = True
+    tank2_alive = True
 
-    world = World(world_matrix1)
+    maps = [world_matrix1, world_matrix2, world_matrix3]
+    world = Map(maps[map_choice])
 
     # List to store all bullets
-    balas = []
+    bullets = []
 
     # Set the title of the window
-    pygame.display.set_caption('Jogo de Tanque')
+    pygame.display.set_caption('Combat')
 
     # Set up tank movements
-    movimento_tanque1 = Movement(meu_tanque, 0.5, {'esquerda': pygame.K_a, 'direita': pygame.K_d,
-                                                   'cima': pygame.K_w, 'baixo': pygame.K_s})
-    movimento_tanque2 = Movement(benio_tanque, 0.5, {'esquerda': pygame.K_LEFT, 'direita': pygame.K_RIGHT,
-                                                     'cima': pygame.K_UP, 'baixo': pygame.K_DOWN})
+    movement_tank1 = Movement(my_tank, 0.5, {'left': pygame.K_a, 'right': pygame.K_d,
+                                             'up': pygame.K_w, 'down': pygame.K_s})
+    movement_tank2 = Movement(enemy_tank, 0.5, {'left': pygame.K_LEFT, 'right': pygame.K_RIGHT,
+                                                'up': pygame.K_UP, 'down': pygame.K_DOWN})
 
     # Game loop
-    rodando = True
-    while rodando:
-        # Fill the screen with green color
-        tela.fill((8,51,8))
+    running = True
+    while running:
+        # Fill the screen with a background color
+        screen.fill((99, 79, 88))
 
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                rodando = False
-            elif evento.type == pygame.KEYDOWN:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
                 current_time = pygame.time.get_ticks()
 
-                # Cooldown para o tanque 1
-                if evento.key == pygame.K_SPACE and tank1vivo and (
-                        current_time - last_shot_time_meu_tanque) > cooldown_time:
-                    balas.append(Bullet('meu_tanque', meu_tanque.x, meu_tanque.y, meu_tanque.angulo
-                                        , 1, 1))
-                    last_shot_time_meu_tanque = current_time
+                # Cooldown for tank 1
+                if event.key == pygame.K_SPACE and tank1_alive and (
+                        current_time - last_shot_time_my_tank) > cooldown_time:
+                    bullets.append(Bullet(my_tank, 'my_tank', my_tank.x, my_tank.y, my_tank.angle, 1, 1))
+                    last_shot_time_my_tank = current_time
+                    shot_sound_effect.play()
 
-                # Cooldown para o tanque 2
-                if evento.key == pygame.K_f and tank2vivo and (
-                        current_time - last_shot_time_benio_tanque) > cooldown_time:
-                    balas.append(Bullet('benio_tanque', benio_tanque.x, benio_tanque.y, benio_tanque.angulo
-                                        , 1, -1))
-                    last_shot_time_benio_tanque = current_time
+                # Cooldown for tank 2
+                if event.key == pygame.K_RSHIFT and tank2_alive and (
+                        current_time - last_shot_time_enemy_tank) > cooldown_time:
+                    bullets.append(
+                        Bullet(enemy_tank, 'enemy_tank', enemy_tank.x, enemy_tank.y, enemy_tank.angle, 1, -1))
+                    last_shot_time_enemy_tank = current_time
+                    shot_sound_effect.play()
 
         # Update bullets
-        for bala in balas:
-            bala.mover()
-            bala.draw(tela)
-            bala.collision_screen()
-            bala.collision_walls(world)
+        for bullet in bullets:
+            bullet.move()
+            bullet.draw(screen)
+            bullet.collision_walls(world)
 
-            if bala.get_num_of_collisions() >= 4:
-                balas.remove(bala)
+            if bullet.get_num_of_collisions() >= 4:
+                bullets.remove(bullet)
 
-            if bala.dono == 'meu_tanque' and tank2vivo and bala.rect.colliderect(benio_tanque.rect):
-                balas.remove(bala)
-                bala.hit_tank(benio_tanque)
+            if bullet.owner == 'my_tank' and tank2_alive and bullet.rect.colliderect(enemy_tank.rect):
+                bullets.remove(bullet)
+                bullet.hit_tank(enemy_tank)
+                hit_sound_effect.play()
 
+                if enemy_tank.get_health() == 0:
+                    tank2_alive = False
+                    bullets.clear()
 
-                if benio_tanque.get_vida() == 0:
-                    tank2vivo = False
-                    balas.clear()
+            elif bullet.owner == 'enemy_tank' and tank1_alive and bullet.rect.colliderect(my_tank.rect):
+                bullets.remove(bullet)
+                bullet.hit_tank(my_tank)
+                hit_sound_effect.play()
 
-            elif bala.dono == 'benio_tanque' and tank1vivo and bala.rect.colliderect(meu_tanque.rect):
-                balas.remove(bala)
-                bala.hit_tank(meu_tanque)
-
-
-                if meu_tanque.get_vida() == 0:
-                    tank1vivo = False
-                    balas.clear()
+                if my_tank.get_health() == 0:
+                    tank1_alive = False
+                    bullets.clear()
 
         # Move tanks
-        if tank1vivo:
-            movimento_tanque1.mover(1)
-            movimento_tanque1.collide_with_walls(world)
-        if tank2vivo:
-            movimento_tanque2.mover(-1)
-            movimento_tanque2.collide_with_walls(world)
+        if tank1_alive:
+            movement_tank1.move(1)
+            movement_tank1.collide_with_walls(world)
+        if tank2_alive:
+            movement_tank2.move(-1)
+            movement_tank2.collide_with_walls(world)
 
         # Draw tanks
-        if tank1vivo:
-            meu_tanque.desenhar(tela)
-        if tank2vivo:
-            benio_tanque.desenhar(tela)
+        if tank1_alive:
+            my_tank.draw(screen)
+        if tank2_alive:
+            enemy_tank.draw(screen)
 
-        world.draw(tela)
-        if meu_tanque.get_vida() != 0 and benio_tanque.get_vida() != 0:
-            draw_text(f"PLAYER 1 LIFE: {meu_tanque.get_vida()}", 150, 40,tela)
-            draw_text(f"PLAYER 2 LIFE: {benio_tanque.get_vida()}", 1280, 40,tela)
+        world.draw(screen)
+        if my_tank.get_health() != 0 and enemy_tank.get_health() != 0:
+            draw_text(f"PLAYER 1 HEALTH: {my_tank.get_health()}", 170, 40, screen)
+            draw_text(f"PLAYER 2 HEALTH: {enemy_tank.get_health()}", 1260, 40, screen)
         else:
-            if meu_tanque.get_vida() == 0 or benio_tanque.get_vida() == 0:
-                # Verificar condição de vitória
-                if not tank1vivo or not tank2vivo:
-                    vencedor = 2 if tank2vivo else 1
-                    iniciar_jogo = show_victory_screen(tela, vencedor)
-                    if iniciar_jogo:
-                        # Reiniciar o jogo
-                        balas.clear()
-                        tank1vivo = True
-                        tank2vivo = True
-                        meu_tanque.reset( 100, 375)
-                        benio_tanque.reset(1340, 375)
-                        balas.clear()
+            if my_tank.get_health() == 0 or enemy_tank.get_health() == 0:
+                # Check victory condition
+                if not tank1_alive or not tank2_alive:
+                    winner = 2 if tank2_alive else 1
+                    restart_game = show_victory_screen(screen, winner)
+                    if restart_game:
+                        # Restart the game
+                        bullets.clear()
+                        tank1_alive = True
+                        tank2_alive = True
+                        my_tank.reset(100, 375)
+                        enemy_tank.reset(1340, 375)
+                        bullets.clear()
+
         pygame.display.flip()
 
     # Quit Pygame

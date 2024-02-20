@@ -3,47 +3,42 @@ import math
 
 
 class Bullet:
-    def __init__(self, dono, x, y, angulo, velocidade, direção_bola):
-        self.dono = dono
-        self.direção_bola = direção_bola
-        self.angulo = angulo
-        self.velocidade = velocidade
+    def __init__(self, tank, owner, x, y, angle, speed, ball_direction):
+        self.owner = owner
+        self.ball_direction = ball_direction
+        self.angle = angle
+        self.speed = speed
         self.size = 5
-        self.color = (0, 0, 0)  # Cor branca
+        self.color = tank.color
         self.num_of_collision = 0
-        self.collided = False  # Adicione esta linha
-        comprimento_tank = 45
-        self.x = x + comprimento_tank * math.cos(math.radians(self.angulo)) * self.direção_bola
-        self.y = y - comprimento_tank * math.sin(math.radians(self.angulo)) * self.direção_bola
+        self.collided = False  # Add this line
+        tank_length = 45
+        self.x = x + tank_length * math.cos(math.radians(self.angle)) * self.ball_direction
+        self.y = y - tank_length * math.sin(math.radians(self.angle)) * self.ball_direction
         self.rect = pygame.Rect(self.x, self.y, self.size, self.size)
 
-    def mover(self):
-        self.x += self.velocidade * math.cos(math.radians(self.angulo)) * self.direção_bola
-        self.y -= self.velocidade * math.sin(math.radians(self.angulo)) * self.direção_bola
+    def move(self):
+        self.x += self.speed * math.cos(math.radians(self.angle)) * self.ball_direction
+        self.y -= self.speed * math.sin(math.radians(self.angle)) * self.ball_direction
         self.rect = pygame.Rect(self.x, self.y, self.size, self.size)
 
-    def draw(self, tela):
-        pygame.draw.rect(tela, self.color, self.rect)
-        pygame.draw.rect(tela, (255, 255, 255), self.rect, 1)
-
-    def collision_screen(self):
-        if self.x >= 1440 or self.x <= 0:
-            self.angulo = 180 - self.angulo
-        if self.y >= 750 or self.y <= 0:
-            self.angulo = -self.angulo
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
 
     def collision_walls(self, world):
+        bounce_sound_effect = pygame.mixer.Sound('assets/bounce.wav')
         for tile in world.tile_list:
             if tile[1].colliderect(self.rect) and not self.collided:
                 self.collided = True
+                bounce_sound_effect.play()
                 if self.x + 5 >= tile[1].right or self.x <= tile[1].left:
-                    self.angulo = 180 - self.angulo
+                    self.angle = 180 - self.angle
                     self.num_of_collision += 1
-                    self.x += self.velocidade * math.cos(math.radians(self.angulo)) * self.direção_bola
+                    self.x += self.speed * math.cos(math.radians(self.angle)) * self.ball_direction
                 elif self.y >= tile[1].top or self.y <= tile[1].bottom:
-                    self.angulo = -self.angulo
+                    self.angle = -self.angle
                     self.num_of_collision += 1
-                    self.y -= self.velocidade * math.sin(math.radians(self.angulo)) * self.direção_bola
+                    self.y -= self.speed * math.sin(math.radians(self.angle)) * self.ball_direction
                 self.rect = pygame.Rect(self.x, self.y, self.size, self.size)
             elif not tile[1].colliderect(self.rect):
                 self.collided = False
@@ -52,4 +47,4 @@ class Bullet:
         return self.num_of_collision
 
     def hit_tank(self, tank):
-        tank.vida -= 1
+        tank.health -= 1

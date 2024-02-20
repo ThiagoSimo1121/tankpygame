@@ -1,29 +1,30 @@
 import pygame
 import math
 
+
 class Movement:
-    def __init__(self, tank, velocidade, teclas):
+    def __init__(self, tank, speed, keys):
         self.tank = tank
-        self.velocidade = velocidade
-        self.teclas = teclas
+        self.speed = speed
+        self.keys = keys
         self.old_x = self.tank.x
         self.old_y = self.tank.y
 
-    def mover(self, direção):
+    def move(self, direction):
         keys = pygame.key.get_pressed()
-        if keys[self.teclas['esquerda']]:
-            self.tank.rotacionar(0.4)  # Gira no sentido anti-horário
-        if keys[self.teclas['direita']]:
-            self.tank.rotacionar(-0.4)  # Gira no sentido horário
-        if keys[self.teclas['cima']]:
-            # Move o tanque na direção que está apontando
+        if keys[self.keys['left']]:
+            self.tank.rotate(0.4)  # Rotate counterclockwise
+        if keys[self.keys['right']]:
+            self.tank.rotate(-0.4)  # Rotate clockwise
+        if keys[self.keys['up']]:
+            # Move the tank in the direction it is facing
             self.old_x = self.tank.x
             self.old_y = self.tank.y
-            self.tank.x += self.velocidade * math.cos(math.radians(self.tank.angulo)) * direção
-            self.tank.y -= self.velocidade * math.sin(math.radians(self.tank.angulo)) * direção
-            # Atualiza a posição da coordenada central inferior do retângulo
-            self.tank.rect = self.tank.imagem.get_rect(center=(self.tank.x, self.tank.y))
-            self.tank.centro_inferior = (self.tank.rect.bottom)
+            self.tank.x += self.speed * math.cos(math.radians(self.tank.angle)) * direction
+            self.tank.y -= self.speed * math.sin(math.radians(self.tank.angle)) * direction
+            # Update the position of the bottom center of the rectangle
+            self.tank.rect = self.tank.image.get_rect(center=(self.tank.x, self.tank.y))
+            self.tank.bottom_center = self.tank.rect.bottom
         if self.tank.x >= 1400:
             self.tank.x = 1400
         if self.tank.x <= 40:
@@ -36,8 +37,8 @@ class Movement:
     def collide_with_walls(self, world):
         for tile in world.tile_list:
             if self.tank.rect.colliderect(tile[1]):
-                # Se houver uma colisão com um bloco do mapa, move o tanque de volta para a posição anterior
+                # If there is a collision with a map block, move the tank back to the previous position
                 self.tank.x = self.old_x
                 self.tank.y = self.old_y
-                # Atualiza a posição da coordenada central inferior do retângulo
-                self.tank.rect = self.tank.imagem.get_rect(center=(self.tank.x, self.tank.y))
+                # Update the position of the bottom center of the rectangle
+                self.tank.rect = self.tank.image.get_rect(center=(self.tank.x, self.tank.y))
