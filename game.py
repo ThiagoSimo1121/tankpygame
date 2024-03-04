@@ -53,7 +53,7 @@ def game_loop(map_choice):
     screen = pygame.display.set_mode((screen_width, screen_height))
 
     # Time between shots
-    cooldown_time = 0
+    cooldown_time = 2000
     last_shot_time_my_tank = 0
     last_shot_time_enemy_tank = 0
 
